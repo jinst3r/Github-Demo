@@ -18,21 +18,25 @@ class GithubRepo {
     var ownerAvatarURL: String?
     var stars: Int?
     var forks: Int?
-    
+    var description: String?
     
     init(jsonResult: NSDictionary) {
         if let name = jsonResult["name"] as? String {
             self.name = name
         }
         
-        if let stars = jsonResult["stargazers_count"] as Int? {
+        if let stars = jsonResult["stargazers_count"] as! Int? {
             self.stars = stars
         }
         
-        if let forks = jsonResult["forks_count"] as Int? {
+        if let forks = jsonResult["forks_count"] as! Int? {
             self.forks = forks
         }
-        
+
+        if let description = jsonResult["description"] as? String {
+            self.description = description
+        }
+
         if let owner = jsonResult["owner"] as? NSDictionary {
             if let ownerHandle = owner["login"] as? String {
                 self.ownerHandle = ownerHandle
@@ -50,13 +54,13 @@ class GithubRepo {
         manager.GET(reposUrl, parameters: params, success: { (operation ,responseObject) -> Void in
             if let results = responseObject["items"] as? NSArray {
                 var repos: [GithubRepo] = []
-                for result in results as [NSDictionary] {
+                for result in results as! [NSDictionary] {
                     repos.append(GithubRepo(jsonResult: result))
                 }
                 successCallback(repos)
             }
         }, failure: { (operation, requestError) -> Void in
-            if let errorCallback = error? {
+            if let errorCallback = error {
                 errorCallback(requestError)
             }
         })

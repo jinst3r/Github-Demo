@@ -8,12 +8,20 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     var searchBar: UISearchBar!
     var searchSettings = GithubRepoSearchSettings()
 
+    @IBOutlet weak var settingButton: UIButton!
+    @IBOutlet weak var tableView: UITableView!
+
+    var repos: [GithubRepo]!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        tableView.delegate = self
+        tableView.dataSource = self
         
         // initialize UISearchBar
         searchBar = UISearchBar()
@@ -26,16 +34,40 @@ class ViewController: UIViewController {
         doSearch()
     }
     
+    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCellWithIdentifier("RepoCell", forIndexPath: indexPath) as! RepoCell
+
+        cell.repo = repos[indexPath.row]
+        
+        return cell
+    }
+    
+    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if repos != nil {
+            return repos!.count
+        } else {
+            return 0
+        }
+    }
+    
     private func doSearch() {
+        // show HUD to start while loading
         MBProgressHUD.showHUDAddedTo(self.view, animated: true)
-        GithubRepo.fetchRepos(searchSettings, { (repos) -> Void in
+        GithubRepo.fetchRepos(searchSettings, successCallback: { (repos) -> Void in
+            // set search results to view controller
+            self.repos = repos
+            self.tableView.reloadData()
+            
+            // print to check result
             for repo in repos {
-                println("[Name: \(repo.name!)]" +
-                    "\n\t[Stars: \(repo.stars!)]" +
-                    "\n\t[Forks: \(repo.forks!)]" +
-                    "\n\t[Owner: \(repo.ownerHandle!)]" +
-                    "\n\t[Avatar: \(repo.ownerAvatarURL!)]")
+                println("[Name: \(repo.name!)]")
+                println("[Stars: \(repo.stars!)]")
+                println("[Forks: \(repo.forks!)]")
+                println("[Owner: \(repo.ownerHandle!)]")
+                println("[Avatar: \(repo.ownerAvatarURL!)]")
+                println("[Description: \(repo.description!)])")
             }
+            // hide HUD when done
             MBProgressHUD.hideHUDForView(self.view, animated: true)
         }, error: { (error) -> Void in
             println(error)
